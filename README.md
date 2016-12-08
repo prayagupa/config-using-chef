@@ -1,62 +1,55 @@
-Intallation
-------------
-
 ```
-wget https://packages.chef.io/files/stable/chef/12.16.42/mac_os_x/10.11/chef-12.16.42-1.dmg
+knife cookbook create streaming-config -o cookbooks
 ```
 
-Configure a resource/config
------------------------------
+```
+ll cookbooks/streaming-config/
+total 12
+drwxrwx--- 1 root vboxsf  442 Dec  8 01:30 ./
+drwxrwx--- 1 root vboxsf  102 Dec  8 01:30 ../
+drwxrwx--- 1 root vboxsf   68 Dec  8 01:30 attributes/
+-rwxrwx--- 1 root vboxsf  463 Dec  8 01:30 CHANGELOG.md*
+drwxrwx--- 1 root vboxsf   68 Dec  8 01:30 definitions/
+drwxrwx--- 1 root vboxsf  102 Dec  8 01:30 files/
+drwxrwx--- 1 root vboxsf   68 Dec  8 01:30 libraries/
+-rwxrwx--- 1 root vboxsf  296 Dec  8 01:30 metadata.rb*
+drwxrwx--- 1 root vboxsf   68 Dec  8 01:30 providers/
+-rwxrwx--- 1 root vboxsf 1525 Dec  8 01:30 README.md*
+drwxrwx--- 1 root vboxsf  102 Dec  8 01:30 recipes/
+drwxrwx--- 1 root vboxsf   68 Dec  8 01:30 resources/
+drwxrwx--- 1 root vboxsf  102 Dec  8 01:30 templates/
 
-```bash
-mkdir streaming-chef-example
-cd streaming-chef-example/
+```
+create a config template, which can be created based on staging or prod environment
+
+```
+$ chef generate template cookbooks/streaming-config streaming.conf
+Recipe: code_generator::template
+  * directory[cookbooks/streaming-config/templates/default] action create
+    - create new directory cookbooks/streaming-config/templates/default
+  * template[cookbooks/streaming-config/templates/streaming.conf.erb] action create
+    - create new file cookbooks/streaming-config/templates/streaming.conf.erb
+    - update content in file cookbooks/streaming-config/templates/streaming.conf.erb from none to e3b0c4
+    (diff output suppressed by config)
+```
+add config template to `streaming.conf.erb`
+
+```
+pipeline.source=x
+pipeline.channel=y
+pipeline.sink=z
 ```
 
-Then create a ruby CHEF script to configure a file at `/etc`, make sure `/etc` has permission 
-to write otherwise need to run chef-client as sudo.
+Then, I will use that config template in my CHEF ruby file.(`recipe/default.rb`)
 
-```ruby
-  1 file '/etc/streaming.conf' do                          
-  2           content 'environment=staging'                                                           
-  3 end     
+```
+template '/etc/streaming.conf' do
+  source 'streaming.conf.erb'
+end
 ```
 
-Finally, I configure the file at `/etc/streaming.conf` from ruby script, which is a CHEF in the JEEKS kitchen, 5th ave, 
-managing things around.
+Finally, I will run the default.rb,
 
-```bash
-chef-client --local-mode configure_a_file_from_kitchen.rb 
-Password:
-[2016-12-07T23:55:17-08:00] WARN: No config file found or specified on command line, using command line options.
-[2016-12-07T23:55:17-08:00] WARN: No cookbooks directory found at or above current directory.  Assuming /Users/as18/possibilities/programming/s2/streaming-chef-example.
-Starting Chef Client, version 12.16.42
-/opt/chefdk/embedded/lib/ruby/gems/2.3.0/gems/chef-12.16.42/lib/chef/mixin/path_sanity.rb:25: warning: Insecure world writable dir /usr/local/scala-2.11.8 in PATH, mode 040777
-[2016-12-07T23:55:18-08:00] WARN: [inet] no ip address on utun0
-[2016-12-07T23:55:18-08:00] WARN: unable to detect ipaddress
-resolving cookbooks for run list: []
-Synchronizing Cookbooks:
-Installing Cookbook Gems:
-Compiling Cookbooks...
-[2016-12-07T23:55:21-08:00] WARN: Node M00974000.nordstrom.net has an empty run list.
-Converging 1 resources
-Recipe: @recipe_files::/Users/as18/possibilities/programming/s2/streaming-chef-example/configure_a_file_from_kitchen.rb
-  * file[/etc/streaming_conf] action create
-    - create new file /etc/streaming.conf
-    - update content in file /etc/streaming.conf from none to ae5ce1
-    --- /etc/streaming_conf	2016-12-07 23:55:21.000000000 -0800
-    +++ /etc/.chef-streaming_conf20161207-35041-1ya2j9j	2016-12-07 23:55:21.000000000 -0800
-    @@ -1 +1,2 @@
-    +environment=staging
-
-Running handlers:
-Running handlers complete
-Chef Client finished, 1/1 resources updated in 03 seconds
 ```
-
-Now, I can see the conf file at `/etc`, 
-
-```bash
-$ cat /etc/streaming.conf 
-environment=staging
+sudo chef-client --local-mode --runlist 'recipe[streaming-config]'
 ```
