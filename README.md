@@ -1,3 +1,6 @@
+
+Create a `cookbook` for `streaming-config`
+
 ```
 knife cookbook create streaming-config -o cookbooks
 ```
@@ -35,12 +38,12 @@ Recipe: code_generator::template
 add config template to `streaming.conf.erb`
 
 ```
-pipeline.source=x
-pipeline.channel=y
-pipeline.sink=z
+pipeline.source=<%= node[:streaming][:sources] %>
+pipeline.channel=<%= node[:streaming[:channels] %>
+pipeline.sink=<%= node[:streaming][:sinks]%>
 ```
 
-Then, I will use that config template in my CHEF ruby file.(`recipe/default.rb`)
+Then, I will use that config template in my CHEF recipe file.(`recipe/default.rb`)
 
 ```
 template '/etc/streaming.conf' do
@@ -48,8 +51,20 @@ template '/etc/streaming.conf' do
 end
 ```
 
-Finally, I will run the default.rb,
+Then, att attributes to be used by the template
+
+```
+  1 default['streaming']['sources']= 'source_1'                                                                                                    2 default['streaming']['channels']= 'channel_1'                                                       
+  3 default['streaming']['sinks']= 'sink_1'
+```
+
+
+Finally, I will run the default.rb recipe,
 
 ```
 sudo chef-client --local-mode --runlist 'recipe[streaming-config]'
 ```
+
+DONE !!! COOKED !!! 
+See config at `/etc/streaming.conf`
+

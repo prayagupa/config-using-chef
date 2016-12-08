@@ -8,4 +8,7 @@
 
 template '/etc/streaming.conf' do
   source 'streaming.conf.erb'
+  variables({
+  	:sources => node[:streaming][:sources]
+  })
 end 
