@@ -1,4 +1,5 @@
-client.sources=<%= @sources %>
-client.channels=<%= node[:streaming][:channels] %>
-client.sinks=<%= node[:streaming][:sinks]  %>
+<% config = node[:streaming][@env] %>
+client.sources=<%= config[:sources] %>
+client.channels=<%= node[:streaming][@env][:channels] %>
+client.sinks=<%= node[:streaming][@env][:sinks]  %>
 
